@@ -82,23 +82,13 @@ class Config(ConfigParser.ConfigParser):
                 valid = False
 
         # Check prop exists and is true/false
-        props = [['advNet', 'enabled'], ['interact', 'enabled'], ['spoof', 'enabled'], ['download', 'passive'],
+        props = [['advNet', 'enabled'], ['spoof', 'enabled'], ['download', 'passive'],
                  ['download', 'active'], ['hp-restrict', 'disable_publicKey'], ['hp-restrict', 'disable_x11'],
                  ['hp-restrict', 'disable_sftp'], ['hp-restrict', 'disable_exec'],
                  ['hp-restrict', 'disable_port_forwarding'],
                  ['packet_logging', 'enabled']]
         for prop in props:
             if not self.check_exist(prop, validation.check_valid_boolean):
-                valid = False
-
-        # If interact is enabled check it's config
-        if self.getboolean(['interact', 'enabled']):
-            prop = ['interact', 'interface']
-            if not self.check_exist(prop, validation.check_valid_ip):
-                valid = False
-
-            prop = ['interact', 'port']
-            if not self.check_exist(prop, validation.check_valid_port):
                 valid = False
 
         # If spoof is enabled check it's config

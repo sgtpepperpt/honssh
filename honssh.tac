@@ -37,7 +37,7 @@ from twisted.python import log
 from twisted.application import internet, service
 
 from honssh.config import Config
-from honssh import server, interact
+from honssh import server
 
 if not os.path.exists('honssh.cfg'):
     print '[ERR][FATAL] honssh.cfg is missing!'
@@ -109,21 +109,6 @@ else:
     application = service.Application('honeypot')
     service = internet.TCPServer(cfg.getint(ssh_port_prop), serverFactory, interface=ssh_addr)
     service.setServiceParent(application)
-
-'''
-Start interaction server if enabled
-'''
-if cfg.getboolean(['interact', 'enabled']):
-    interact_interface_prop = ['interact', 'interface']
-    iport = cfg.getint(['interact', 'port'])
-
-    if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
-        reactor.listenTCP(iport, interact.make_interact_factory(serverFactory),
-                          interface=cfg.get(interact_interface_prop))
-    else:
-        service = internet.TCPServer(iport, interact.make_interact_factory(serverFactory),
-                                     interface=cfg.get(interact_interface_prop))
-        service.setServiceParent(application)
 
 if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
     reactor.run()
