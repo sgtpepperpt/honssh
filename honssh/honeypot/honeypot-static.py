@@ -29,7 +29,6 @@
 # SUCH DAMAGE.
 
 from honssh.config import Config
-from honssh.utils import validation
 
 
 class Plugin(object):
@@ -52,24 +51,4 @@ class Plugin(object):
                 'connection_timeout': self.connection_timeout}
 
     def validate_config(self):
-        props = [['honeypot-static', 'enabled'], ['honeypot-static', 'pre-auth'], ['honeypot-static', 'post-auth']]
-        for prop in props:
-            if not self.cfg.check_exist(prop, validation.check_valid_boolean):
-                return False
-
-        props = [['honeypot-static', 'honey_ip']]
-        for prop in props:
-            if not self.cfg.check_exist(prop, validation.check_valid_ip):
-                return False
-
-        props = [['honeypot-static', 'honey_port']]
-        for prop in props:
-            if not self.cfg.check_exist(prop, validation.check_valid_port):
-                return False
-
-        props = [['honeypot-static', 'sensor_name']]
-        for prop in props:
-            if not self.cfg.check_exist(prop):
-                return False
-
         return True

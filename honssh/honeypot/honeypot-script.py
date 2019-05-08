@@ -32,7 +32,6 @@ import subprocess
 import shlex
 
 from honssh.config import Config
-from honssh.utils import validation
 
 
 class Plugin(object):
@@ -80,21 +79,4 @@ class Plugin(object):
             return {'success': False}
 
     def validate_config(self):
-        props = [['honeypot-script', 'enabled'], ['honeypot-script', 'pre-auth'], ['honeypot-script', 'post-auth']]
-        for prop in props:
-            if not self.cfg.check_exist(prop, validation.check_valid_boolean):
-                return False
-
-        if self.cfg.getboolean(['honeypot-script', 'pre-auth']):
-            props = [['honeypot-script', 'pre-auth-script']]
-            for prop in props:
-                if not self.cfg.check_exist(prop):
-                    return False
-
-        if self.cfg.getboolean(['honeypot-script', 'post-auth']):
-            props = [['honeypot-script', 'post-auth-script']]
-            for prop in props:
-                if not self.cfg.check_exist(prop):
-                    return False
-
         return True
