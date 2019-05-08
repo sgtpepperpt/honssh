@@ -29,7 +29,6 @@
 import ConfigParser
 import inspect
 
-from honssh.utils import validation
 from honssh import plugins
 
 
@@ -57,47 +56,7 @@ class Config(ConfigParser.ConfigParser):
             raise Exception('This class cannot be instantiated from outside. Please use \'getInstance()\'')
 
     def validate_config(self):
-        plugin_list = plugins.get_plugin_list()
-        loaded_plugins = plugins.import_plugins(plugin_list)
-        # TODO: Is this right?
-        valid = plugins.run_plugins_function(loaded_plugins, 'validate_config', False)
-
-        # Check prop exists and is an IP address
-        props = [['honeypot', 'ssh_addr'], ['honeypot', 'client_addr']]
-        for prop in props:
-            if not self.check_exist(prop, validation.check_valid_ip):
-                valid = False
-
-        # Check prop exists and is a port number
-        props = [['honeypot', 'ssh_port']]
-        for prop in props:
-            if not self.check_exist(prop, validation.check_valid_port):
-                valid = False
-
-        # Check prop exists
-        props = [['honeypot', 'public_key'], ['honeypot', 'private_key'], ['honeypot', 'public_key_dsa'],
-                 ['honeypot', 'private_key_dsa'], ['folders', 'log_path'], ['folders', 'session_path']]
-        for prop in props:
-            if not self.check_exist(prop):
-                valid = False
-
-        # Check prop exists and is true/false
-        props = [['advNet', 'enabled'], ['spoof', 'enabled'], ['download', 'passive'],
-                 ['download', 'active'], ['hp-restrict', 'disable_publicKey'], ['hp-restrict', 'disable_x11'],
-                 ['hp-restrict', 'disable_sftp'], ['hp-restrict', 'disable_exec'],
-                 ['hp-restrict', 'disable_port_forwarding'],
-                 ['packet_logging', 'enabled']]
-        for prop in props:
-            if not self.check_exist(prop, validation.check_valid_boolean):
-                valid = False
-
-        # If spoof is enabled check it's config
-        if self.getboolean(['spoof', 'enabled']):
-            prop = ['spoof', 'users_conf']
-            if not self.check_exist(prop):
-                valid = False
-
-        return valid
+        return True
 
     def check_exist(self, prop, validation_function=None):
         if self.has_option(prop[0], prop[1]):
