@@ -26,7 +26,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-from honssh.protocols import baseProtocol, sftp, term, execTerm, portForward
+from honssh.protocols import baseProtocol, term
 from honssh import log
 from honssh.config import Config
 import struct
@@ -106,8 +106,6 @@ class SSH(baseProtocol.BaseProtocol):
             else:
                 direction = 'SERVER -> HONSSH'
 
-        self.out.packet_logged(direction, packet, payload)
-
         if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
                 log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
 
@@ -137,12 +135,10 @@ class SSH(baseProtocol.BaseProtocol):
 
             if not self.server.post_auth_started:
                 if self.username != '' and self.password != '':
-                    self.out.login_failed(self.username, self.password)
                     self.server.login_failed(self.username, self.password)
 
         elif packet == 'SSH_MSG_USERAUTH_SUCCESS':
             if len(self.username) > 0 and len(self.password) > 0:
-                self.out.login_successful(self.username, self.password, self.server.spoofed)
                 self.server.login_successful(self.username, self.password)
 
         elif packet == 'SSH_MSG_USERAUTH_INFO_REQUEST':
@@ -174,48 +170,6 @@ class SSH(baseProtocol.BaseProtocol):
 
             if channel_type == 'session':
                 self.create_channel(parent, id, channel_type)
-            elif channel_type == 'x11':
-                if self.cfg.getboolean(['hp-restrict', 'disable_x11']):
-                    log.msg(log.LPURPLE, '[SSH]', 'Detected X11 Channel - Disabling!')
-                    self.sendOn = False
-                    self.send_back(parent, 92, self.int_to_hex(id))
-                else:
-                    # LOG X11 Channel opened - not logging
-                    the_uuid = uuid.uuid4().hex
-                    the_name = '[X11-' + str(id) + ']'
-                    self.create_channel(parent, id, channel_type,
-                                        session=baseProtocol.BaseProtocol(uuid=the_uuid, name=the_name, ssh=self))
-                    channel = self.get_channel(id, '[CLIENT]')
-                    channel['name'] = the_name
-                    self.out.channel_opened(the_uuid, channel['name'])
-            elif channel_type == 'direct-tcpip' or channel_type == 'forwarded-tcpip':
-                if self.cfg.getboolean(['hp-restrict', 'disable_port_forwarding']):
-                    log.msg(log.LPURPLE, '[SSH]', 'Detected Port Forwarding Channel - Disabling!')
-                    self.sendOn = False
-                    self.send_back(parent, 92, self.int_to_hex(id) + self.int_to_hex(1) + self.string_to_hex(
-                        'open failed') + self.int_to_hex(0))
-                else:
-                    # LOG PORT FORWARDING Channel opened
-                    self.extract_int(4)
-                    self.extract_int(4)
-
-                    conn_details = {'dstIP': self.extract_string(), 'dstPort': self.extract_int(4),
-                                    'srcIP': self.out.end_ip, 'srcPort': self.extract_int(4)}
-                    the_uuid = uuid.uuid4().hex
-                    self.create_channel(parent, id, channel_type)
-
-                    if parent == '[SERVER]':
-                        other_parent = '[CLIENT]'
-                        the_name = '[LPRTF' + str(id) + ']'
-                    else:
-                        other_parent = '[SERVER]'
-                        the_name = '[RPRTF' + str(id) + ']'
-
-                    channel = self.get_channel(id, other_parent)
-                    channel['name'] = the_name
-                    self.out.channel_opened(the_uuid, channel['name'])
-                    channel['session'] = portForward.PortForward(self.out, the_uuid, channel['name'],
-                                                                 self, conn_details, parent, other_parent)
             else:
                 # UNKNOWN CHANNEL TYPE
                 if channel_type not in ['exit-status']:
@@ -234,7 +188,6 @@ class SSH(baseProtocol.BaseProtocol):
 
         elif packet == 'SSH_MSG_CHANNEL_OPEN_FAILURE':
             channel = self.get_channel(self.extract_int(4), parent)
-            self.out.channel_closed(channel['session'])
             self.channels.remove(channel)
             # CHANNEL FAILED TO OPEN
 
@@ -245,47 +198,8 @@ class SSH(baseProtocol.BaseProtocol):
 
             if channel_type == 'shell':
                 channel['name'] = '[TERM' + str(channel['serverID']) + ']'
-                self.out.channel_opened(the_uuid, channel['name'])
                 channel['session'] = term.Term(self.out, the_uuid, channel['name'], self, channel['clientID'])
-            elif channel_type == 'exec':
-                if self.cfg.getboolean(['hp-restrict', 'disable_exec']):
-                    log.msg(log.LPURPLE, '[SSH]', 'Detected EXEC Channel Request - Disabling!')
-                    self.sendOn = False
-                    self.send_back(parent, 100, self.int_to_hex(channel['serverID']))
-                    blocked = True
-                else:
-                    blocked = False
 
-                channel['name'] = '[EXEC' + str(channel['serverID']) + ']'
-                self.extract_bool()
-                command = self.extract_string()
-                self.out.channel_opened(the_uuid, channel['name'])
-                channel['session'] = execTerm.ExecTerm(self.out, the_uuid, channel['name'], command, self, blocked)
-
-                if blocked:
-                    channel['session'].channel_closed()
-                    self.out.channel_closed(channel['session'])
-                    self.channels.remove(channel)
-            elif channel_type == 'subsystem':
-                self.extract_bool()
-                subsystem = self.extract_string()
-
-                if subsystem == 'sftp':
-                    if self.cfg.getboolean(['hp-restrict', 'disable_sftp']):
-                        log.msg(log.LPURPLE, '[SSH]', 'Detected SFTP Channel Request - Disabling!')
-                        self.sendOn = False
-                        self.send_back(parent, 100, self.int_to_hex(channel['serverID']))
-                    else:
-                        channel['name'] = '[SFTP' + str(channel['serverID']) + ']'
-                        self.out.channel_opened(the_uuid, channel['name'])
-                        channel['session'] = sftp.SFTP(self.out, the_uuid, channel['name'], self)
-                else:
-                    # UNKNOWN SUBSYSTEM
-                    log.msg(log.LRED, '[SSH]', 'Unknown Subsystem Type Detected - ' + subsystem)
-            elif channel_type == 'x11-req':
-                if self.cfg.getboolean(['hp-restrict', 'disable_x11']):
-                    self.sendOn = False
-                    self.send_back(parent, 82, '')
             else:
                 # UNKNOWN CHANNEL REQUEST TYPE
                 if channel_type not in ['window-change', 'env', 'pty-req', 'exit-status', 'exit-signal']:
@@ -303,7 +217,6 @@ class SSH(baseProtocol.BaseProtocol):
                 # CHANNEL CLOSED
                 if channel['session'] is not None:
                     channel['session'].channel_closed()
-                    self.out.channel_closed(channel['session'])
 
                 self.channels.remove(channel)
         # - END Channels
@@ -343,8 +256,6 @@ class SSH(baseProtocol.BaseProtocol):
             direction = 'HONSSH -> CLIENT'
         else:
             direction = 'HONSSH -> SERVER'
-
-        self.out.packet_logged(direction, packet, payload)
 
         if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
                 log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
@@ -389,8 +300,6 @@ class SSH(baseProtocol.BaseProtocol):
     def inject(self, packet_num, payload):
         direction = 'INTERACT -> SERVER'
         packet = self.packetLayout[packet_num]
-
-        self.out.packet_logged(direction, packet, payload)
 
         if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
                 log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))

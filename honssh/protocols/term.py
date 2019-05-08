@@ -40,16 +40,10 @@ class Term(baseProtocol.BaseProtocol):
         self.tabPress = False
         self.upArrow = False
 
-        self.out = out
         self.clientID = client_id
-        self.ttylog_file = self.out.logLocation + datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f") \
-                           + '_' + self.name[1:-1] + '.tty'
-        self.out.open_tty(self.uuid, self.ttylog_file)
         self.interactors = []
-        self.out.register_self(self)
 
     def channel_closed(self):
-        self.out.close_tty(self.ttylog_file)
         for i in self.interactors:
             i.transport.loseConnection()
     
@@ -57,8 +51,6 @@ class Term(baseProtocol.BaseProtocol):
         self.data = payload   
          
         if parent == '[SERVER]':
-            # Log to TTY File
-            self.out.input_tty(self.ttylog_file, self.data)
 
             while len(self.data) > 0:
                 # If Tab Pressed
@@ -79,8 +71,7 @@ class Term(baseProtocol.BaseProtocol):
                     self.data = self.data[1:]
                     if self.command != '':
                         log.msg(log.LPURPLE, '[TERM]', 'Entered command: %s' % self.command)
-                        self.out.command_entered(self.uuid, self.command)
-                    
+
                     self.command = ''
                     self.pointer = 0
                 # If Home Pressed
@@ -111,8 +102,6 @@ class Term(baseProtocol.BaseProtocol):
                     self.data = self.data[1:]
         
         elif parent == '[CLIENT]':
-            # Log to TTY File
-            self.out.output_tty(self.ttylog_file, self.data)
             for i in self.interactors:
                 i.sendKeystroke(self.data)
             
@@ -161,6 +150,4 @@ class Term(baseProtocol.BaseProtocol):
 
     def inject(self, message):
         message = message.encode('utf8')
-        # Log to TTY File
-        self.out.interact_tty(self.ttylog_file, message)
         self.ssh.inject_key(self.clientID, message)

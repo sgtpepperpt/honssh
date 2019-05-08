@@ -35,15 +35,12 @@ from twisted.internet import threads
 
 #from honssh import log
 
-output_plugin_folders = ['honssh/output', 'plugins/output']
 honeypot_plugin_folders = ['honssh/honeypot', 'plugins/honeypot']
 
 
 def get_plugin_list(plugin_type='all'):
     if plugin_type == 'all':
-        plugin_folders = output_plugin_folders + honeypot_plugin_folders
-    elif plugin_type == 'output':
-        plugin_folders = output_plugin_folders
+        plugin_folders = honeypot_plugin_folders
     elif plugin_type == 'honeypot':
         plugin_folders = honeypot_plugin_folders
 

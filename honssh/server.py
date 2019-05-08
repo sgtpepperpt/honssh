@@ -31,7 +31,6 @@ from twisted.internet import reactor
 
 from honssh import client, networking, honsshServer, connections, plugins
 from honssh import log
-from honssh import output_handler
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
 from honssh.config import Config
@@ -67,7 +66,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         self.honey_port = 0
 
     def connectionMade(self):
-        self.out = output_handler.Output(self.factory)
         self.net = networking.Networking()
 
         self.sshParse = ssh.SSH(self, self.out)
@@ -114,9 +112,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
             pass
         honsshServer.HonsshServer.connectionLost(self, reason)
 
-        if self.wasConnected:
-            self.out.connection_lost()
-
     def ssh_KEXINIT(self, packet):
         return honsshServer.HonsshServer.ssh_KEXINIT(self, packet)
 
@@ -149,8 +144,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
 
     def connection_setup(self):
         self.wasConnected = True
-        self.out.connection_made(self.peer_ip, self.peer_port, self.honey_ip, self.honey_port, self.sensor_name)
-        self.out.set_version(self.otherVersionString)
 
     def start_post_auth(self, username, password, auth_type):
         self.post_auth_started = True
