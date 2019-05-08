@@ -30,7 +30,6 @@
 
 from honssh.config import Config
 from honssh.utils import validation
-from honssh import spoof
 
 
 class Plugin(object):
@@ -42,15 +41,7 @@ class Plugin(object):
         return self.get_connection_details()
 
     def get_post_auth_details(self, conn_details):
-        success, username, password = spoof.get_connection_details(conn_details)
-        if success:
-            details = self.get_connection_details()
-            details['username'] = username
-            details['password'] = password
-            details['connection_timeout'] = self.connection_timeout
-        else:
-            details = {'success': False}
-        return details
+        return {'success': False} # went like this after spoof removed
 
     def get_connection_details(self):
         sensor_name = self.cfg.get(['honeypot-static', 'sensor_name'])

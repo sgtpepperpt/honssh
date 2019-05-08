@@ -52,12 +52,6 @@ devmode_prop = ['devmode', 'enabled']
 if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
     log.startLogging(sys.stdout, setStdout=0)
 
-'''
-Validate configuration
-'''
-if not cfg.validate_config():
-    sys.exit(1)
-
 ssh_addr = cfg.get(['honeypot', 'ssh_addr'])
 
 '''
