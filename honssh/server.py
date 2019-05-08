@@ -176,7 +176,7 @@ class HonsshServerFactory(factory.SSHFactory):
         else:
             if self.cfg.getboolean(['honeypot-static', 'enabled']):
                 log.msg(log.LPURPLE, '[SERVER]', 'Acquiring SSH Version String from honey_ip:honey_port')
-                client_factory = client.HonsshSlimClientFactory()
+                client_factory = client.HonsshSlimClientFactory() # only at beginning to get ssh string
                 client_factory.server = self
 
                 reactor.connectTCP(self.cfg.get(['honeypot-static', 'honey_ip']),

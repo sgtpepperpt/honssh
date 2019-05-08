@@ -42,7 +42,6 @@ import hashlib
 import socket
 import urllib2
 import base64
-import GeoIP
 
 
 class Output(object):
@@ -358,6 +357,5 @@ class Output(object):
     def cname(self, ipv4_str):  # Thanks Are.
         """Checks the ipv4_str against the GeoIP database. Returns the full country name of origin if 
         the IPv4 address is found in the database. Returns None if not found."""
-        geo = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
-        country = geo.country_name_by_addr(ipv4_str)
-        return country
+
+        return ''
