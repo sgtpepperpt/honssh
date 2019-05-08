@@ -32,7 +32,7 @@ import datetime
 
 
 class Term(baseProtocol.BaseProtocol):
-    def __init__(self, out, uuid, chan_name, ssh, client_id):
+    def __init__(self, uuid, chan_name, ssh, client_id):
         super(Term, self).__init__(uuid, chan_name, ssh)
 
         self.command = ''
@@ -48,7 +48,7 @@ class Term(baseProtocol.BaseProtocol):
             i.transport.loseConnection()
     
     def parse_packet(self, parent, payload):
-        self.data = payload   
+        self.data = payload
          
         if parent == '[SERVER]':
 

@@ -43,7 +43,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         self.timeoutCount = 0
         self.interactors = []
 
-        self.out = None
         self.net = None
         self.sshParse = None
 
@@ -68,7 +67,7 @@ class HonsshServerTransport(honsshServer.HonsshServer):
     def connectionMade(self):
         self.net = networking.Networking()
 
-        self.sshParse = ssh.SSH(self, self.out)
+        self.sshParse = ssh.SSH(self)
 
         self.peer_ip = self.transport.getPeer().host
         self.peer_port = self.transport.getPeer().port + 1

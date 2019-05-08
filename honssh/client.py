@@ -35,11 +35,9 @@ from honssh.config import Config
 class HonsshClientTransport(transport.SSHClientTransport):
     def __init__(self):
         self.cfg = Config.getInstance()
-        self.out = None
 
     def connectionMade(self):
         log.msg(log.LGREEN, '[CLIENT]', 'New client connection')
-        self.out = self.factory.server.out
         self.factory.server.client = self
         self.factory.server.sshParse.set_client(self)
         transport.SSHClientTransport.connectionMade(self)

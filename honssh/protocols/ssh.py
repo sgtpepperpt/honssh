@@ -65,7 +65,7 @@ class SSH(baseProtocol.BaseProtocol):
         100: 'SSH_MSG_CHANNEL_FAILURE'  #
     }
 
-    def __init__(self, server, out):
+    def __init__(self, server):
         super(SSH, self).__init__()
 
         self.channels = []
@@ -77,7 +77,6 @@ class SSH(baseProtocol.BaseProtocol):
 
         self.sendOn = False
         self.expect_password = 0
-        self.out = out
         self.server = server
         self.channels = []
         self.client = None
@@ -198,7 +197,7 @@ class SSH(baseProtocol.BaseProtocol):
 
             if channel_type == 'shell':
                 channel['name'] = '[TERM' + str(channel['serverID']) + ']'
-                channel['session'] = term.Term(self.out, the_uuid, channel['name'], self, channel['clientID'])
+                channel['session'] = term.Term(the_uuid, channel['name'], self, channel['clientID'])
 
             else:
                 # UNKNOWN CHANNEL REQUEST TYPE
