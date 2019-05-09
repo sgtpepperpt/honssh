@@ -29,7 +29,7 @@
 from twisted.conch.ssh import factory
 from twisted.internet import reactor
 
-from honssh import client, networking, honsshServer, connections, plugins
+from honssh import client, honsshServer, connections, plugins
 from honssh import log
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
@@ -43,7 +43,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         self.timeoutCount = 0
         self.interactors = []
 
-        self.net = None
         self.sshParse = None
 
         self.wasConnected = False
@@ -65,8 +64,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         self.honey_port = 0
 
     def connectionMade(self):
-        self.net = networking.Networking()
-
         self.sshParse = ssh.SSH(self)
 
         self.peer_ip = self.transport.getPeer().host

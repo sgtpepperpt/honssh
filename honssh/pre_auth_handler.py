@@ -63,8 +63,8 @@ class PreAuth(base_auth_handler.BaseAuth):
                             'Connecting to Honeypot: %s (%s:%s)' % (self.sensor_name, self.honey_ip, self.honey_port))
                     client_factory = client.HonsshClientFactory()
                     client_factory.server = self.server
-                    bind_ip = self.server.net.setup_networking(self.server.peer_ip, self.honey_ip, self.honey_port)
-                    self.networkingSetup = True
+                    bind_ip = '0.0.0.0'
+
                     reactor.connectTCP(self.honey_ip, self.honey_port, client_factory,
                                        bindAddress=(bind_ip, self.server.peer_port + 2),
                                        timeout=self.connection_timeout)
@@ -97,8 +97,6 @@ class PreAuth(base_auth_handler.BaseAuth):
     def connection_lost(self):
         if not self.server.post_auth_started:
             self.server.disconnected = True
-            if self.networkingSetup:
-                self.server.net.remove_networking(self.server.factory.connections.connections)
 
             if self.auth_plugin is not None:
                 if self.server.clientConnected:

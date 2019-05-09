@@ -83,8 +83,7 @@ class PostAuth(base_auth_handler.BaseAuth):
                                 (self.sensor_name, self.honey_ip, self.honey_port))
                         client_factory = client.HonsshClientFactory()
                         client_factory.server = self.server
-                        bind_ip = self.server.net.setup_networking(self.server.peer_ip, self.honey_ip, self.honey_port)
-                        self.networkingSetup = True
+                        bind_ip = '0.0.0.0'
                         reactor.connectTCP(self.honey_ip, self.honey_port, client_factory,
                                            bindAddress=(bind_ip, self.server.peer_port + 1),
                                            timeout=self.connection_timeout)
@@ -166,8 +165,6 @@ class PostAuth(base_auth_handler.BaseAuth):
 
     def connection_lost(self):
         self.server.disconnected = True
-        if self.networkingSetup:
-            self.server.net.remove_networking(self.server.factory.connections.connections)
 
         if self.auth_plugin is not None:
             if self.server.clientConnected:
