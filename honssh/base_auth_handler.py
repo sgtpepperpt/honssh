@@ -47,7 +47,6 @@ class BaseAuth(object):
 
         self.finishedSending = False
         self.delayedPackets = []
-        self.networkingSetup = False
 
     def get_conn_details(self):
         if self.auth_plugin is None:
