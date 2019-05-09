@@ -35,7 +35,7 @@ from twisted.internet import threads
 
 #from honssh import log
 
-honeypot_plugin_folders = ['honssh/honeypot', 'plugins/honeypot']
+honeypot_plugin_folders = ['honssh/honeypot']
 
 
 def get_plugin_list(plugin_type='all'):
