@@ -157,17 +157,7 @@ class HonsshServerFactory(factory.SSHFactory):
         self.cfg = Config.getInstance()
         self.otherVersionString = ''
         self.plugin_servers = []
-        self.ourVersionString = self.cfg.get(['honeypot', 'ssh_banner'])
-
-        if len(self.ourVersionString) > 0:
-            log.msg(log.LPURPLE, '[SERVER]', 'Using ssh_banner for SSH Version String: ' + self.ourVersionString)
-        else:
-            log.msg(log.LPURPLE, '[SERVER]', 'Acquiring SSH Version String from honey_ip:honey_port')
-            client_factory = client.HonsshSlimClientFactory() # only at beginning to get ssh string
-            client_factory.server = self
-
-            reactor.connectTCP(self.cfg.get(['honeypot-static', 'honey_ip']),
-                               int(self.cfg.get(['honeypot-static', 'honey_port'])), client_factory)
+        self.ourVersionString = 'SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.3'
 
         plugin_list = plugins.get_plugin_list()
         loaded_plugins = plugins.import_plugins(plugin_list)

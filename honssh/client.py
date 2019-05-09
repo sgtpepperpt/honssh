@@ -27,7 +27,7 @@
 # SUCH DAMAGE.
 
 from twisted.conch.ssh import transport
-from twisted.internet import reactor, protocol, defer
+from twisted.internet import protocol, defer
 from honssh import log
 from honssh.config import Config
 
@@ -73,37 +73,3 @@ class HonsshClientTransport(transport.SSHClientTransport):
 
 class HonsshClientFactory(protocol.ClientFactory):
     protocol = HonsshClientTransport
-
-
-class HonsshSlimClientTransport(transport.SSHClientTransport):
-    gotVersion = False
-
-    def dataReceived(self, data):
-        self.buf = self.buf + data
-        if not self.gotVersion:
-            if self.buf.find('\n', self.buf.find('SSH-')) == -1:
-                return
-
-            lines = self.buf.split('\n')
-            for p in lines:
-                if p.startswith('SSH-'):
-                    self.gotVersion = True
-                    self.ourVersionString = p.strip()
-                    self.factory.server.ourVersionString = self.ourVersionString
-                    log.msg(log.LBLUE, '[CLIENT]', 'Got SSH Version String: ' + self.factory.server.ourVersionString)
-                    self.loseConnection()
-
-
-class HonsshSlimClientFactory(protocol.ClientFactory):
-    protocol = HonsshSlimClientTransport
-
-    def clientConnectionFailed(self, connector, reason):
-        log.msg(log.LRED, '[HONSSH][ERR][FATAL]',
-                'HonSSH could not connect to the honeypot to accquire the SSH Version String.')
-        log.msg(log.LRED, '[HONSSH][ERR][FATAL]',
-                'Please ensure connectivity between HonSSH\'s client_addr to honey_ip:honey_port or set ssh_banner manually')
-        log.msg(log.LRED, '[HONSSH][ERR][FATAL]', '...Gracefully Exiting')
-        reactor.stop()
-
-    def clientConnectionLost(self, connector, reason):
-        log.msg(log.LGREEN, '[HONSSH]', 'HonSSH Boot Sequence Complete - Ready for attacks!')
