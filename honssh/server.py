@@ -29,7 +29,7 @@
 from twisted.conch.ssh import factory
 from twisted.internet import reactor
 
-from honssh import client, honsshServer, connections, plugins
+from honssh import client, honsshServer, plugins
 from honssh import log
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
@@ -156,7 +156,6 @@ class HonsshServerFactory(factory.SSHFactory):
     def __init__(self):
         self.cfg = Config.getInstance()
         self.otherVersionString = ''
-        self.connections = connections.Connections()
         self.plugin_servers = []
         self.ourVersionString = self.cfg.get(['honeypot', 'ssh_banner'])
 
