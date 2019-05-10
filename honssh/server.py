@@ -29,7 +29,8 @@
 from twisted.conch.ssh import factory
 from twisted.internet import reactor
 
-from honssh import client, honsshServer, plugins
+from honssh.honey import HoneypotData
+from honssh import honsshServer
 from honssh import log
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
@@ -73,9 +74,8 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         self.post_auth = post_auth_handler.PostAuth(self)
 
         # Get auth plugins
-        plugin_list = plugins.get_plugin_list(plugin_type='honeypot')
-        pre_auth_plugin = plugins.import_auth_plugin(self.pre_auth.name, plugin_list)
-        post_auth_plugin = plugins.import_auth_plugin(self.post_auth.name, plugin_list)
+        pre_auth_plugin = HoneypotData()
+        post_auth_plugin = HoneypotData()
 
         # Check pre auth plugin is set
         if pre_auth_plugin is None:
@@ -156,12 +156,7 @@ class HonsshServerFactory(factory.SSHFactory):
         self.plugin_servers = []
         self.ourVersionString = 'SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.3'
 
-        plugin_list = plugins.get_plugin_list()
-        loaded_plugins = plugins.import_plugins(plugin_list)
-        for plugin in loaded_plugins:
-            plugin_server = plugins.run_plugins_function([plugin], 'start_server', False)
-            plugin_name = plugins.get_plugin_name(plugin)
-            self.plugin_servers.append({'name': plugin_name, 'server': plugin_server})
+        self.plugin_servers.append({'name': 'honeypot-static', 'server': False})
 
         if self.ourVersionString != '':
             log.msg(log.LGREEN, '[HONSSH]', 'HonSSH Boot Sequence Complete - Ready for attacks!')

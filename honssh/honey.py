@@ -29,14 +29,14 @@
 # SUCH DAMAGE.
 
 
-class Plugin(object):
+class HoneypotData(object):
     def __init__(self):
         self.connection_timeout = 10
 
-    def get_pre_auth_details(self, conn_details):
+    def get_pre_auth_details(self):
         return self.get_connection_details()
 
-    def get_post_auth_details(self, conn_details):
+    def get_post_auth_details(self):
         return {'success': False} # went like this after spoof removed
 
     def get_connection_details(self):

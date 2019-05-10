@@ -31,9 +31,6 @@
 import time
 
 from honssh import log
-from honssh import plugins
-from honssh.config import Config
-
 
 class BaseAuth(object):
     def __init__(self, server, name):
@@ -52,8 +49,12 @@ class BaseAuth(object):
             log.msg(log.LRED, '[' + self.name + ']', 'NO AUTH PLUGIN SET FOR ' + self.name)
             return {'success': False}
         else:
-            return plugins.run_plugins_function([self.auth_plugin], 'get_' + self.name.lower() + '_details', False,
-                                                self.conn_details)
+            if self.name == 'PRE_AUTH':
+                return self.server.pre_auth.auth_plugin.get_pre_auth_details()
+            elif self.name == 'POST_AUTH':
+                return self.server.post_auth.auth_plugin.get_post_auth_details()
+            else:
+                print("unknown name: " + self.name)
 
     def is_pot_connected(self):
         timeout_count = 0

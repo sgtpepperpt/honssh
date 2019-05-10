@@ -29,9 +29,6 @@
 import ConfigParser
 import inspect
 
-from honssh import plugins
-
-
 class Config(ConfigParser.ConfigParser):
     _instance = None
 
@@ -48,10 +45,6 @@ class Config(ConfigParser.ConfigParser):
         if 'cls' in stack[1][0].f_locals and stack[1][0].f_locals['cls'] is self.__class__:
             ConfigParser.ConfigParser.__init__(self)
 
-            plugin_list = plugins.get_plugin_list()
-            cfg_files = plugins.get_plugin_cfg_files(plugin_list)
-            cfg_files.append('honssh.cfg')
-            self.read(cfg_files)
         else:
             raise Exception('This class cannot be instantiated from outside. Please use \'getInstance()\'')
 

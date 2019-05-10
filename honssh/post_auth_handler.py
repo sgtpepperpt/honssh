@@ -29,7 +29,6 @@
 from honssh import base_auth_handler
 from twisted.internet import threads
 from twisted.internet import reactor
-from honssh import plugins
 from honssh import client
 from honssh import log
 
@@ -165,10 +164,6 @@ class PostAuth(base_auth_handler.BaseAuth):
 
     def connection_lost(self):
         self.server.disconnected = True
-
-        if self.auth_plugin is not None:
-            if self.server.clientConnected:
-                plugins.run_plugins_function([self.auth_plugin], 'connection_lost', True, self.conn_details)
 
     def dont_post_auth(self):
         self.server.post_auth_started = False

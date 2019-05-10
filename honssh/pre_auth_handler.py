@@ -32,7 +32,6 @@ from twisted.internet import threads
 from honssh import base_auth_handler
 from honssh import client
 from honssh import log
-from honssh import plugins
 
 
 class PreAuth(base_auth_handler.BaseAuth):
@@ -97,10 +96,3 @@ class PreAuth(base_auth_handler.BaseAuth):
     def connection_lost(self):
         if not self.server.post_auth_started:
             self.server.disconnected = True
-
-            if self.auth_plugin is not None:
-                if self.server.clientConnected:
-                    plugins.run_plugins_function([self.auth_plugin], 'connection_lost', True, self.conn_details)
-        else:
-            if self.auth_plugin is not None:
-                plugins.run_plugins_function([self.auth_plugin], 'connection_lost', True, self.conn_details)
