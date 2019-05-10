@@ -35,7 +35,7 @@ class Term(baseProtocol.BaseProtocol):
     def __init__(self, uuid, chan_name, ssh, client_id):
         super(Term, self).__init__(uuid, chan_name, ssh)
 
-        self.command = ''
+        self.command = b''
         self.pointer = 0
         self.tabPress = False
         self.upArrow = False
@@ -54,50 +54,50 @@ class Term(baseProtocol.BaseProtocol):
 
             while len(self.data) > 0:
                 # If Tab Pressed
-                if self.data[:1] == '\x09':
+                if self.data[:1] == b'\x09':
                     self.tabPress = True 
                     self.data = self.data[1:]
                 # If Backspace Pressed
-                elif self.data[:1] == '\x7f' or self.data[:1] == '\x08':
+                elif self.data[:1] == b'\x7f' or self.data[:1] == b'\x08':
                     if self.pointer > 0:
                         self.command = self.command[:self.pointer-1] + self.command[self.pointer:]
                         self.pointer -= 1
                     self.data = self.data[1:]
                 # If enter or ctrl+c or newline
-                elif self.data[:1] == '\x0d' or self.data[:1] == '\x03' or self.data[:1] == '\x0a':
-                    if self.data[:1] == '\x03':
-                        self.command += "^C"
+                elif self.data[:1] == b'\x0d' or self.data[:1] == b'\x03' or self.data[:1] == b'\x0a':
+                    if self.data[:1] == b'\x03':
+                        self.command += '^C'
 
                     self.data = self.data[1:]
-                    if self.command != '':
-                        log.msg(log.LPURPLE, '[TERM]', 'Entered command: %s' % self.command)
+                    if self.command != b'':
+                        log.msg(log.LPURPLE, '[TERM]', 'Entered command: {0}'.format(self.command))
 
-                    self.command = ''
+                    self.command = b''
                     self.pointer = 0
                 # If Home Pressed
-                elif self.data[:3] == '\x1b\x4f\x48':
+                elif self.data[:3] == b'\x1b\x4f\x48':
                     self.pointer = 0
                     self.data = self.data[3:]
                 # If End Pressed
-                elif self.data[:3] == '\x1b\x4f\x46':
+                elif self.data[:3] == b'\x1b\x4f\x46':
                     self.pointer = len(self.command)
                     self.data = self.data[3:]
                 # If Right Pressed
-                elif self.data[:3] == '\x1b\x5b\x43':
+                elif self.data[:3] == b'\x1b\x5b\x43':
                     if self.pointer != len(self.command):
                         self.pointer += 1
                     self.data = self.data[3:]
                 # If Left Pressed
-                elif self.data[:3] == '\x1b\x5b\x44':
+                elif self.data[:3] == b'\x1b\x5b\x44':
                     if self.pointer != 0:
                         self.pointer -= 1
                     self.data = self.data[3:]
                 # If up or down arrow
-                elif self.data[:3] == '\x1b\x5b\x41' or self.data[:3] == '\x1b\x5b\x42':
+                elif self.data[:3] == b'\x1b\x5b\x41' or self.data[:3] == b'\x1b\x5b\x42':
                     self.upArrow = True
                     self.data = self.data[3:]
                 else:
-                    self.command = self.command[:self.pointer].join(self.data[:1].join(self.command[self.pointer:]))
+                    self.command = self.command[:self.pointer] + self.data[:1] + self.command[self.pointer:]
                     self.pointer += 1
                     self.data = self.data[1:]
         
@@ -106,33 +106,33 @@ class Term(baseProtocol.BaseProtocol):
                 i.sendKeystroke(self.data)
             
             if self.tabPress:
-                if not self.data.startswith('\x0d'):
-                    if self.data != '\x07':
+                if not self.data.startswith(b'\x0d'):
+                    if self.data != b'\x07':
                         self.command = self.command + self.data
                 self.tabPress = False
 
             if self.upArrow:
                 while len(self.data) != 0:
                     # Backspace
-                    if self.data[:1] == '\x08':
+                    if self.data[:1] == b'\x08':
                         self.command = self.command[:-1]
                         self.pointer -= 1
                         self.data = self.data[1:]
                     # ESC[K - Clear Line
-                    elif self.data[:3] == '\x1b\x5b\x4b':
+                    elif self.data[:3] == b'\x1b\x5b\x4b':
                         self.command = self.command[:self.pointer]
                         self.data = self.data[3:]
-                    elif self.data[:1] == '\x0d':
+                    elif self.data[:1] == b'\x0d':
                         self.pointer = 0
                         self.data = self.data[1:]
                     # Right Arrow
-                    elif self.data[:3] == '\x1b\x5b\x43':
+                    elif self.data[:3] == b'\x1b\x5b\x43':
                         self.pointer += 1
                         self.data = self.data[3:]
-                    elif self.data[:2] == '\x1b\x5b' and self.data[3] == '\x50':
+                    elif self.data[:2] == b'\x1b\x5b' and self.data[3] == b'\x50':
                         self.data = self.data[4:]
                     # Needed?!
-                    elif self.data[:1] != '\x07' and self.data[:1] != '\x0d':
+                    elif self.data[:1] != b'\x07' and self.data[:1] != b'\x0d':
                         self.command = self.command[:self.pointer] + self.data[:1] + self.command[self.pointer:]
                         self.pointer += 1
                         self.data = self.data[1:]
