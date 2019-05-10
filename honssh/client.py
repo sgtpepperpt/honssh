@@ -55,7 +55,7 @@ class HonsshClientTransport(transport.SSHClientTransport):
         else:
             log.msg(log.LBLUE, '[CLIENT]', 'Lost connection with the Honeypot (Server<->Honeypot not connected)')
 
-        if self.factory.server.post_auth_started or self.factory.server.post_auth.auth_plugin is None:
+        if self.factory.server.post_auth_started:
             self.factory.server.pre_auth.connection_lost()
         else:
             self.factory.server.post_auth.connection_lost()

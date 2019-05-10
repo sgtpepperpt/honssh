@@ -30,13 +30,10 @@
 
 import time
 
-from honssh import log
-
 class BaseAuth(object):
     def __init__(self, server, name):
         self.server = server
         self.name = name
-        self.auth_plugin = None
 
         self.connection_timeout = 10
         self.conn_details = None
@@ -45,16 +42,20 @@ class BaseAuth(object):
         self.delayedPackets = []
 
     def get_conn_details(self):
-        if self.auth_plugin is None:
-            log.msg(log.LRED, '[' + self.name + ']', 'NO AUTH PLUGIN SET FOR ' + self.name)
-            return {'success': False}
+        if self.name == 'PRE_AUTH':
+            return {
+                'success': True,
+                'sensor_name': 'sensor_temp_name',
+                'honey_ip': '127.0.0.1',
+                'honey_port': 2022,
+                'connection_timeout': 10
+            }
+        elif self.name == 'POST_AUTH':
+            return {
+                'success': False
+            }  # went like this after spoof removed
         else:
-            if self.name == 'PRE_AUTH':
-                return self.server.pre_auth.auth_plugin.get_pre_auth_details()
-            elif self.name == 'POST_AUTH':
-                return self.server.post_auth.auth_plugin.get_post_auth_details()
-            else:
-                print("unknown name: " + self.name)
+            print("unknown name: " + self.name)
 
     def is_pot_connected(self):
         timeout_count = 0

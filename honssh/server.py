@@ -29,7 +29,6 @@
 from twisted.conch.ssh import factory
 from twisted.internet import reactor
 
-from honssh.honey import HoneypotData
 from honssh import honsshServer
 from honssh import log
 from honssh import post_auth_handler
@@ -72,27 +71,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
 
         self.pre_auth = pre_auth_handler.PreAuth(self)
         self.post_auth = post_auth_handler.PostAuth(self)
-
-        # Get auth plugins
-        pre_auth_plugin = HoneypotData()
-        post_auth_plugin = HoneypotData()
-
-        # Check pre auth plugin is set
-        if pre_auth_plugin is None:
-            log.msg(log.LRED, '[SERVER]', 'NO AUTH PLUGIN ENABLED FOR ' + self.pre_auth.name)
-        else:
-            self.pre_auth.auth_plugin = pre_auth_plugin
-
-        # Check post auth plugin is set
-        if post_auth_plugin is None:
-            log.msg(log.LRED, '[SERVER]', 'NO AUTH PLUGIN ENABLED FOR ' + self.post_auth.name)
-        else:
-            self.post_auth.auth_plugin = post_auth_plugin
-
-        # Check for same auth plugin
-        if post_auth_plugin.__class__ is pre_auth_plugin.__class__:
-            # Share auth plugin instance
-            self.post_auth.auth_plugin = self.pre_auth.auth_plugin
 
         # Execute pre auth
         self.pre_auth.start()

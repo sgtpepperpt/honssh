@@ -155,8 +155,7 @@ class PostAuth(base_auth_handler.BaseAuth):
                 self.server.sshParse.parse_packet("[SERVER]", packet[0], packet[1])
 
     def login_successful(self):
-        if hasattr(self.auth_plugin, 'login_successful'):
-            self.auth_plugin.login_successful()
+        pass
 
     def login_failed(self):
         # Currently not used
