@@ -36,7 +36,7 @@ from twisted.conch.ssh.keys import Key
 from twisted.python import log
 from twisted.application import internet, service
 
-from honssh import server
+from honssh import serverTransport
 
 
 '''
@@ -81,7 +81,7 @@ with open('id_dsa.pub') as publicBlobFile:
 '''
 Startup server factory
 '''
-serverFactory = server.HonsshServerFactory()
+serverFactory = serverTransport.HonsshServerFactory()
 serverFactory.privateKeys = {'ssh-rsa': privateKey, 'ssh-dss': privateKeyDSA}
 serverFactory.publicKeys = {'ssh-rsa': publicKey, 'ssh-dss': publicKeyDSA}
 

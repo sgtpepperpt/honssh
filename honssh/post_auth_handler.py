@@ -29,7 +29,7 @@
 from honssh import base_auth_handler
 from twisted.internet import threads
 from twisted.internet import reactor
-from honssh import client
+from honssh import clientTransport
 from honssh import log
 
 
@@ -80,7 +80,7 @@ class PostAuth(base_auth_handler.BaseAuth):
                     if not self.server.disconnected:
                         log.msg(log.LGREEN, '[POST_AUTH]', 'Connecting to Honeypot: %s (%s:%s)' %
                                 (self.sensor_name, self.honey_ip, self.honey_port))
-                        client_factory = client.HonsshClientFactory()
+                        client_factory = clientTransport.HonsshClientFactory()
                         client_factory.server = self.server
                         bind_ip = '0.0.0.0'
                         reactor.connectTCP(self.honey_ip, self.honey_port, client_factory,

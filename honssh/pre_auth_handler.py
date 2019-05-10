@@ -30,7 +30,7 @@ from twisted.internet import reactor
 from twisted.internet import threads
 
 from honssh import base_auth_handler
-from honssh import client
+from honssh import clientTransport
 from honssh import log
 
 
@@ -60,7 +60,7 @@ class PreAuth(base_auth_handler.BaseAuth):
                 if not self.server.disconnected:
                     log.msg(log.LGREEN, '[PRE_AUTH]',
                             'Connecting to Honeypot: %s (%s:%s)' % (self.sensor_name, self.honey_ip, self.honey_port))
-                    client_factory = client.HonsshClientFactory()
+                    client_factory = clientTransport.HonsshClientFactory()
                     client_factory.server = self.server
                     bind_ip = '0.0.0.0'
 
