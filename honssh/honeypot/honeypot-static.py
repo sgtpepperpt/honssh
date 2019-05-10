@@ -28,13 +28,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-from honssh.config import Config
-
 
 class Plugin(object):
     def __init__(self):
-        self.cfg = Config.getInstance()
-        self.connection_timeout = self.cfg.getint(['honeypot', 'connection_timeout'])
+        self.connection_timeout = 10
 
     def get_pre_auth_details(self, conn_details):
         return self.get_connection_details()
@@ -43,9 +40,9 @@ class Plugin(object):
         return {'success': False} # went like this after spoof removed
 
     def get_connection_details(self):
-        sensor_name = self.cfg.get(['honeypot-static', 'sensor_name'])
-        honey_ip = self.cfg.get(['honeypot-static', 'honey_ip'])
-        honey_port = self.cfg.getint(['honeypot-static', 'honey_port'])
+        sensor_name = 'sensor_temp_name'
+        honey_ip = '127.0.0.1'
+        honey_port = 2022
 
         return {'success': True, 'sensor_name': sensor_name, 'honey_ip': honey_ip, 'honey_port': honey_port,
                 'connection_timeout': self.connection_timeout}

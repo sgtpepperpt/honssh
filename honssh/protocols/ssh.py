@@ -73,8 +73,6 @@ class SSH(baseProtocol.BaseProtocol):
         self.password = ''
         self.auth_type = ''
 
-        self.cfg = Config.getInstance()
-
         self.sendOn = False
         self.expect_password = 0
         self.server = server
@@ -105,8 +103,7 @@ class SSH(baseProtocol.BaseProtocol):
             else:
                 direction = 'SERVER -> HONSSH'
 
-        if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
-                log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
+            log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
 
         # - UserAuth
         if packet == 'SSH_MSG_USERAUTH_REQUEST':
@@ -120,17 +117,15 @@ class SSH(baseProtocol.BaseProtocol):
                 self.start_post_auth()
 
             elif self.auth_type == 'publickey':
-                if self.cfg.getboolean(['hp-restrict', 'disable_publicKey']):
-                    self.sendOn = False
-                    self.server.sendPacket(51, self.string_to_hex('password') + chr(0))
+                self.sendOn = False
+                self.server.sendPacket(51, self.string_to_hex('password') + chr(0))
 
         elif packet == 'SSH_MSG_USERAUTH_FAILURE':
             auth_list = self.extract_string()
 
             if 'publickey' in auth_list:
-                if self.cfg.getboolean(['hp-restrict', 'disable_publicKey']):
-                    log.msg(log.LPURPLE, '[SSH]', 'Detected Public Key Auth - Disabling!')
-                    payload = self.string_to_hex('password') + chr(0)
+                log.msg(log.LPURPLE, '[SSH]', 'Detected Public Key Auth - Disabling!')
+                payload = self.string_to_hex('password') + chr(0)
 
             if not self.server.post_auth_started:
                 if self.username != '' and self.password != '':
@@ -233,9 +228,8 @@ class SSH(baseProtocol.BaseProtocol):
         elif packet == 'SSH_MSG_GLOBAL_REQUEST':
             channel_type = self.extract_string()
             if channel_type == 'tcpip-forward':
-                if self.cfg.getboolean(['hp-restrict', 'disable_port_forwarding']):
-                    self.sendOn = False
-                    self.send_back(parent, 82, '')
+                self.sendOn = False  # disabled for now, had cfg here
+                self.send_back(parent, 82, '')
 
         if self.server.post_auth_started:
             if parent == '[CLIENT]':
@@ -256,8 +250,7 @@ class SSH(baseProtocol.BaseProtocol):
         else:
             direction = 'HONSSH -> SERVER'
 
-        if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
-                log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
+            log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
 
         if parent == '[SERVER]':
             self.server.sendPacket(message_num, payload)
@@ -300,8 +293,7 @@ class SSH(baseProtocol.BaseProtocol):
         direction = 'INTERACT -> SERVER'
         packet = self.packetLayout[packet_num]
 
-        if self.cfg.has_option('devmode', 'enabled') and self.cfg.getboolean(['devmode', 'enabled']):
-                log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
+        log.msg(log.LBLUE, '[SSH]', direction + ' - ' + packet.ljust(37) + ' - ' + repr(payload))
 
         self.client.sendPacket(packet_num, payload)
 

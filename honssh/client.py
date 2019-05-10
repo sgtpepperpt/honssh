@@ -29,13 +29,9 @@
 from twisted.conch.ssh import transport
 from twisted.internet import protocol, defer
 from honssh import log
-from honssh.config import Config
 
 
 class HonsshClientTransport(transport.SSHClientTransport):
-    def __init__(self):
-        self.cfg = Config.getInstance()
-
     def connectionMade(self):
         log.msg(log.LGREEN, '[CLIENT]', 'New client connection')
         self.factory.server.client = self

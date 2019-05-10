@@ -40,7 +40,6 @@ class BaseAuth(object):
         self.server = server
         self.name = name
         self.auth_plugin = None
-        self.cfg = Config.getInstance()
 
         self.connection_timeout = 10
         self.conn_details = None

@@ -37,7 +37,7 @@ from honssh.config import Config
 class Plugin(object):
     def __init__(self):
         self.cfg = Config.getInstance()
-        self.connection_timeout = self.cfg.getint(['honeypot', 'connection_timeout'])
+        self.connection_timeout = 10  # could be configurable
 
     def get_pre_auth_details(self, conn_details):
         command = '%s %s %s %s %s' % (

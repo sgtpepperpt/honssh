@@ -33,13 +33,11 @@ from honssh import client, honsshServer, plugins
 from honssh import log
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
-from honssh.config import Config
 from honssh.protocols import ssh
 
 
 class HonsshServerTransport(honsshServer.HonsshServer):
     def __init__(self):
-        self.cfg = Config.getInstance()
         self.timeoutCount = 0
         self.interactors = []
 
@@ -154,7 +152,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
 
 class HonsshServerFactory(factory.SSHFactory):
     def __init__(self):
-        self.cfg = Config.getInstance()
         self.otherVersionString = ''
         self.plugin_servers = []
         self.ourVersionString = 'SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.3'
