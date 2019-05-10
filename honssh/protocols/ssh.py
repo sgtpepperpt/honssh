@@ -28,7 +28,6 @@
 
 from honssh.protocols import baseProtocol, term
 from honssh import log
-from honssh.config import Config
 import struct
 import uuid
 

@@ -36,33 +36,25 @@ from twisted.conch.ssh.keys import Key
 from twisted.python import log
 from twisted.application import internet, service
 
-from honssh.config import Config
 from honssh import server
 
-if not os.path.exists('honssh.cfg'):
-    print '[ERR][FATAL] honssh.cfg is missing!'
-    sys.exit(1)
-
-cfg = Config.getInstance()
 
 '''
 Check to activate dev mode
 '''
-devmode_prop = ['devmode', 'enabled']
-if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
-    log.startLogging(sys.stdout, setStdout=0)
+log.startLogging(sys.stdout, setStdout=0)
 
-ssh_addr = cfg.get(['honeypot', 'ssh_addr'])
+ssh_addr = '127.0.0.1'
 
 '''
 Log and session paths
 '''
-log_path = cfg.get(['folders', 'log_path'])
+log_path = 'logs'
 if not os.path.exists(log_path):
     os.makedirs(log_path)
     os.chmod(log_path, 0755)
 
-session_path = cfg.get(['folders', 'session_path'])
+session_path = 'sessions'
 if not os.path.exists(session_path):
     os.makedirs(session_path)
     os.chmod(session_path, 0755)
@@ -70,19 +62,19 @@ if not os.path.exists(session_path):
 '''
 Read public and private keys
 '''
-with open(cfg.get(['honeypot', 'private_key'])) as privateBlobFile:
+with open('id_rsa') as privateBlobFile:
     privateBlob = privateBlobFile.read()
     privateKey = Key.fromString(data=privateBlob)
 
-with open(cfg.get(['honeypot', 'public_key'])) as publicBlobFile:
+with open('id_rsa.pub') as publicBlobFile:
     publicBlob = publicBlobFile.read()
     publicKey = Key.fromString(data=publicBlob)
 
-with open(cfg.get(['honeypot', 'private_key_dsa'])) as privateBlobFile:
+with open('id_dsa') as privateBlobFile:
     privateBlob = privateBlobFile.read()
     privateKeyDSA = Key.fromString(data=privateBlob)
 
-with open(cfg.get(['honeypot', 'public_key_dsa'])) as publicBlobFile:
+with open('id_dsa.pub') as publicBlobFile:
     publicBlob = publicBlobFile.read()
     publicKeyDSA = Key.fromString(data=publicBlob)
 
@@ -96,13 +88,7 @@ serverFactory.publicKeys = {'ssh-rsa': publicKey, 'ssh-dss': publicKeyDSA}
 '''
 Start up server
 '''
-ssh_port_prop = ['honeypot', 'ssh_port']
-if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
-    reactor.listenTCP(cfg.getint(ssh_port_prop), serverFactory, interface=ssh_addr)
-else:
-    application = service.Application('honeypot')
-    service = internet.TCPServer(cfg.getint(ssh_port_prop), serverFactory, interface=ssh_addr)
-    service.setServiceParent(application)
+application = service.Application('honeypot')
+service = internet.TCPServer(2222, serverFactory, interface=ssh_addr)
+service.setServiceParent(application)
 
-if cfg.has_option(devmode_prop[0], devmode_prop[1]) and cfg.getboolean(devmode_prop):
-    reactor.run()
