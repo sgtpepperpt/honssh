@@ -44,9 +44,9 @@ LCYAN = '\033[1;36m'
 
 
 def msg(color, identifier, message):
-    if not isinstance(message, basestring):
+    if not isinstance(message, str):
         message = repr(message)
 
         log.msg(color + identifier + ' - ' + message + '\033[0m')
     else:
-        log.msg(identifier +  ' - ' + message)
+        log.msg(identifier + ' - ' + message)

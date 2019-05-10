@@ -110,21 +110,21 @@ class SSH(baseProtocol.BaseProtocol):
             service = self.extract_string()
             self.auth_type = self.extract_string()
 
-            if self.auth_type == 'password':
+            if self.auth_type == b'password':
                 self.extract_bool()
                 self.password = self.extract_string()
                 self.start_post_auth()
 
-            elif self.auth_type == 'publickey':
+            elif self.auth_type == b'publickey':
                 self.sendOn = False
-                self.server.sendPacket(51, self.string_to_hex('password') + chr(0))
+                self.server.sendPacket(51, self.string_to_hex('password') + chr(0).encode())
 
         elif packet == 'SSH_MSG_USERAUTH_FAILURE':
             auth_list = self.extract_string()
 
-            if 'publickey' in auth_list:
+            if b'publickey' in auth_list:
                 log.msg(log.LPURPLE, '[SSH]', 'Detected Public Key Auth - Disabling!')
-                payload = self.string_to_hex('password') + chr(0)
+                payload = self.string_to_hex('password') + chr(0).encode()
 
             if not self.server.post_auth_started:
                 if self.username != '' and self.password != '':
@@ -135,7 +135,7 @@ class SSH(baseProtocol.BaseProtocol):
                 self.server.login_successful(self.username, self.password)
 
         elif packet == 'SSH_MSG_USERAUTH_INFO_REQUEST':
-            self.auth_type = 'keyboard-interactive'
+            self.auth_type = b'keyboard-interactive'
             self.extract_string()
             self.extract_string()
             self.extract_string()
@@ -161,11 +161,11 @@ class SSH(baseProtocol.BaseProtocol):
             channel_type = self.extract_string()
             id = self.extract_int(4)
 
-            if channel_type == 'session':
+            if channel_type == b'session':
                 self.create_channel(parent, id, channel_type)
             else:
                 # UNKNOWN CHANNEL TYPE
-                if channel_type not in ['exit-status']:
+                if channel_type not in [b'exit-status']:
                     log.msg(log.LRED, '[SSH]', 'Unknown Channel Type Detected - ' + channel_type)
 
         elif packet == 'SSH_MSG_CHANNEL_OPEN_CONFIRMATION':
@@ -189,14 +189,14 @@ class SSH(baseProtocol.BaseProtocol):
             channel_type = self.extract_string()
             the_uuid = uuid.uuid4().hex
 
-            if channel_type == 'shell':
+            if channel_type == b'shell':
                 channel['name'] = '[TERM' + str(channel['serverID']) + ']'
                 channel['session'] = term.Term(the_uuid, channel['name'], self, channel['clientID'])
 
             else:
                 # UNKNOWN CHANNEL REQUEST TYPE
-                if channel_type not in ['window-change', 'env', 'pty-req', 'exit-status', 'exit-signal']:
-                    log.msg(log.LRED, '[SSH]', 'Unknown Channel Request Type Detected - ' + channel_type)
+                if channel_type not in [b'window-change', b'env', b'pty-req', b'exit-status', b'exit-signal']:
+                    log.msg(log.LRED, '[SSH]', 'Unknown Channel Request Type Detected - ' + channel_type.decode())
 
         elif packet == 'SSH_MSG_CHANNEL_FAILURE':
             pass
@@ -226,7 +226,7 @@ class SSH(baseProtocol.BaseProtocol):
 
         elif packet == 'SSH_MSG_GLOBAL_REQUEST':
             channel_type = self.extract_string()
-            if channel_type == 'tcpip-forward':
+            if channel_type == b'tcpip-forward':
                 self.sendOn = False  # disabled for now, had cfg here
                 self.send_back(parent, 82, '')
 
@@ -300,6 +300,10 @@ class SSH(baseProtocol.BaseProtocol):
         b = message.encode('utf-8')
         size = struct.pack('>L', len(b))
         return size + b
+
+    def bin_string_to_hex(self, message):
+        size = struct.pack('>L', len(message))
+        return size + message
 
     def int_to_hex(self, value):
         return struct.pack('>L', value)

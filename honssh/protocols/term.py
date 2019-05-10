@@ -96,8 +96,8 @@ class Term(baseProtocol.BaseProtocol):
                 elif self.data[:3] == '\x1b\x5b\x41' or self.data[:3] == '\x1b\x5b\x42':
                     self.upArrow = True
                     self.data = self.data[3:]
-                else:                   
-                    self.command = self.command[:self.pointer] + self.data[:1] + self.command[self.pointer:]
+                else:
+                    self.command = self.command[:self.pointer].join(self.data[:1].join(self.command[self.pointer:]))
                     self.pointer += 1
                     self.data = self.data[1:]
         

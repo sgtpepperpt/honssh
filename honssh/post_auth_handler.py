@@ -67,7 +67,7 @@ class PostAuth(base_auth_handler.BaseAuth):
                 self.password = returned_conn_details['password']
                 self.connection_timeout = returned_conn_details['connection_timeout']
 
-                self.auth_packets = [[5, self.to_string('ssh-userauth')], [50, self.to_string(
+                self.auth_packets = [[5, self.to_string('ssh-userauth')], [50, self.bin_to_string(
                     self.username) + self.to_string('ssh-connection') + self.to_string('none')]]
 
                 if self.sensor_name == self.server.sensor_name and self.honey_ip == self.server.honey_ip \
@@ -120,6 +120,9 @@ class PostAuth(base_auth_handler.BaseAuth):
     def to_string(self, message):
         return self.server.sshParse.string_to_hex(message)
 
+    def bin_to_string(self, message):
+        return self.server.sshParse.bin_string_to_hex(message)
+
     def send_login(self):
         if self.username:
             if self.conn_details['username'] != self.username:
@@ -138,12 +141,12 @@ class PostAuth(base_auth_handler.BaseAuth):
         self.finishedSending = True
         self.server.post_auth_started = False
         
-        if self.conn_details['auth_type'] in ['password', 'keyboard-interactive']:
-            if self.conn_details['auth_type'] == 'password':
-                packet = [50, self.to_string(self.username) + self.to_string('ssh-connection') + self.to_string(
-                    'password') + '\x00' + self.to_string(self.password)]
-            elif self.conn_details['auth_type'] == 'keyboard-interactive':
-                packet = [61, '\x00\x00\x00\x01' + self.to_string(self.password)]
+        if self.conn_details['auth_type'] in [b'password', b'keyboard-interactive']:
+            if self.conn_details['auth_type'] == b'password':
+                payload = self.bin_to_string(self.username) + self.to_string('ssh-connection') + self.to_string('password') + b'\x00' + self.bin_to_string(self.password)
+                packet = [50, payload]
+            elif self.conn_details['auth_type'] == b'keyboard-interactive':
+                packet = [61, '\x00\x00\x00\x01' + self.bin_to_string(self.password)]
                 
             self.server.sshParse.send_back('[CLIENT]', packet[0], packet[1])
         else:

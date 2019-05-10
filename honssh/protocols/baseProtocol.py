@@ -56,14 +56,14 @@ class BaseProtocol(object):
         pass
 
     def extract_int(self, length):
-        value = int(self.data[:length].encode('hex'), 16)
+        value = int.from_bytes(self.data[:length], byteorder='big')
         self.packetSize = self.packetSize - length
         self.data = self.data[length:]
         return value
 
     def extract_string(self):
         length = self.extract_int(4)
-        value = str(self.data[:length])
+        value = self.data[:length]
         self.packetSize -= length
         self.data = self.data[length:]
         return value

@@ -77,9 +77,9 @@ class HonsshServerTransport(transport.SSHServerTransport):
         Called when the connection is made to the other side.  We sent our
         version and the MSG_KEXINIT packet.
         """
-        self.transport.write('%s\r\n' % (self.ourVersionString,))
-        self.currentEncryptions = transport.SSHCiphers('none', 'none', 'none', 'none')
-        self.currentEncryptions.setKeys('', '', '', '', '', '')
+        self.transport.write('{0}\r\n'.format(self.ourVersionString).encode())
+        self.currentEncryptions = transport.SSHCiphers(b'none', b'none', b'none', b'none')
+        self.currentEncryptions.setKeys(b'', b'', b'', b'', b'', b'')
         self.otherVersionString = 'Unknown'
 
     def connectionLost(self, reason):
@@ -137,24 +137,24 @@ class HonsshServerTransport(transport.SSHServerTransport):
         self.buf += data
 
         if not self.gotVersion:
-            if self.buf.find('\n', self.buf.find('SSH-')) == -1:
+            if self.buf.find(b'\n', self.buf.find(b'SSH-')) == -1:
                 return
-            lines = self.buf.split('\n')
+            lines = self.buf.split(b'\n')
             for p in lines:
-                if p.startswith('SSH-'):
+                if p.startswith(b'SSH-'):
                     self.gotVersion = True
                     self.otherVersionString = p.strip()
-                    remote_version = p.split('-')[1]
+                    remote_version = p.split(b'-')[1]
 
                     if remote_version not in self.supportedVersions:
                         self._unsupportedVersionReceived(remote_version)
                         return
                     i = lines.index(p)
-                    self.buf = '\n'.join(lines[i + 1:])
+                    self.buf = b'\n'.join(lines[i + 1:])
                     self.sendKexInit()
         packet = self.getPacket()
         while packet:
-            message_num = ord(packet[0])
+            message_num = ord(packet[0:1])
             self.dispatchMessage(message_num, packet[1:])
             packet = self.getPacket()
 
@@ -198,14 +198,14 @@ class HonsshServerFactory(factory.SSHFactory):
 
         if not self.primes:
             ske = t.supportedKeyExchanges[:]
-            if 'diffie-hellman-group-exchange-sha1' in ske:
-                ske.remove('diffie-hellman-group-exchange-sha1')
-            if 'diffie-hellman-group-exchange-sha256' in ske:
-                ske.remove('diffie-hellman-group-exchange-sha256')
+            if b'diffie-hellman-group-exchange-sha1' in ske:
+                ske.remove(b'diffie-hellman-group-exchange-sha1')
+            if b'diffie-hellman-group-exchange-sha256' in ske:
+                ske.remove(b'diffie-hellman-group-exchange-sha256')
             t.supportedKeyExchanges = ske
 
-        t.supportedCiphers = ['aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'aes128-cbc', '3des-cbc', 'blowfish-cbc',
-                              'cast128-cbc', 'aes192-cbc', 'aes256-cbc']
-        t.supportedPublicKeys = ['ssh-rsa', 'ssh-dss']
-        t.supportedMACs = ['hmac-md5', 'hmac-sha1']
+        t.supportedCiphers = [b'aes128-ctr', b'aes192-ctr', b'aes256-ctr', b'aes128-cbc', b'3des-cbc', b'blowfish-cbc',
+                              b'cast128-cbc', b'aes192-cbc', b'aes256-cbc']
+        t.supportedPublicKeys = [b'ssh-rsa', b'ssh-dss']
+        t.supportedMACs = [b'hmac-md5', b'hmac-sha1']
         return t

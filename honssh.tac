@@ -52,12 +52,12 @@ Log and session paths
 log_path = 'logs'
 if not os.path.exists(log_path):
     os.makedirs(log_path)
-    os.chmod(log_path, 0755)
+    os.chmod(log_path, 0o755)
 
 session_path = 'sessions'
 if not os.path.exists(session_path):
     os.makedirs(session_path)
-    os.chmod(session_path, 0755)
+    os.chmod(session_path, 0o755)
 
 '''
 Read public and private keys
@@ -82,8 +82,8 @@ with open('id_dsa.pub') as publicBlobFile:
 Startup server factory
 '''
 serverFactory = serverTransport.HonsshServerFactory()
-serverFactory.privateKeys = {'ssh-rsa': privateKey, 'ssh-dss': privateKeyDSA}
-serverFactory.publicKeys = {'ssh-rsa': publicKey, 'ssh-dss': publicKeyDSA}
+serverFactory.privateKeys = {b'ssh-rsa': privateKey, b'ssh-dss': privateKeyDSA}
+serverFactory.publicKeys = {b'ssh-rsa': publicKey, b'ssh-dss': publicKeyDSA}
 
 '''
 Start up server
