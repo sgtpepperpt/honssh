@@ -26,17 +26,15 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-from twisted.conch.ssh import factory
-from twisted.internet import reactor
+from twisted.conch.ssh import factory, transport
 
-from honssh import honsshServer
 from honssh import log
 from honssh import post_auth_handler
 from honssh import pre_auth_handler
 from honssh.protocols import ssh
 
 
-class HonsshServerTransport(honsshServer.HonsshServer):
+class HonsshServerTransport(transport.SSHServerTransport):
     def __init__(self):
         self.timeoutCount = 0
         self.interactors = []
@@ -75,26 +73,30 @@ class HonsshServerTransport(honsshServer.HonsshServer):
         # Execute pre auth
         self.pre_auth.start()
 
-        honsshServer.HonsshServer.connectionMade(self)
+        """
+        Called when the connection is made to the other side.  We sent our
+        version and the MSG_KEXINIT packet.
+        """
+        self.transport.write('%s\r\n' % (self.ourVersionString,))
+        self.currentEncryptions = transport.SSHCiphers('none', 'none', 'none', 'none')
+        self.currentEncryptions.setKeys('', '', '', '', '', '')
+        self.otherVersionString = 'Unknown'
 
     def connectionLost(self, reason):
         try:
             self.client.loseConnection()
         except:
             pass
-        honsshServer.HonsshServer.connectionLost(self, reason)
-
-    def ssh_KEXINIT(self, packet):
-        return honsshServer.HonsshServer.ssh_KEXINIT(self, packet)
+        transport.SSHServerTransport.connectionLost(self, reason)
 
     def dispatchMessage(self, message_num, payload):
-        if honsshServer.HonsshServer.isEncrypted(self, "both"):
+        if transport.SSHServerTransport.isEncrypted(self, "both"):
             if not self.post_auth_started:
                 self.packet_buffer(self.pre_auth, message_num, payload)
             else:
                 self.packet_buffer(self.post_auth, message_num, payload)
         else:
-            honsshServer.HonsshServer.dispatchMessage(self, message_num, payload)
+            transport.SSHServerTransport.dispatchMessage(self, message_num, payload)
 
     def packet_buffer(self, stage, message_num, payload):
         if not self.clientConnected:
@@ -105,9 +107,6 @@ class HonsshServerTransport(honsshServer.HonsshServer):
                 stage.delayedPackets.append([message_num, payload])
             else:
                 self.sshParse.parse_packet("[SERVER]", message_num, payload)
-
-    def sendPacket(self, message_num, payload):
-        honsshServer.HonsshServer.sendPacket(self, message_num, payload)
 
     def connection_init(self, sensor_name, honey_ip, honey_port):
         self.sensor_name = sensor_name
@@ -126,6 +125,57 @@ class HonsshServerTransport(honsshServer.HonsshServer):
 
     def login_failed(self, username, password):
         self.post_auth.login_failed()
+
+    def dataReceived(self, data):
+        """
+        First, check for the version string (SSH-2.0-*).  After that has been
+        received, this method adds data to the buffer, and pulls out any
+        packets.
+
+        @type data: C{str}
+        """
+        self.buf += data
+
+        if not self.gotVersion:
+            if self.buf.find('\n', self.buf.find('SSH-')) == -1:
+                return
+            lines = self.buf.split('\n')
+            for p in lines:
+                if p.startswith('SSH-'):
+                    self.gotVersion = True
+                    self.otherVersionString = p.strip()
+                    remote_version = p.split('-')[1]
+
+                    if remote_version not in self.supportedVersions:
+                        self._unsupportedVersionReceived(remote_version)
+                        return
+                    i = lines.index(p)
+                    self.buf = '\n'.join(lines[i + 1:])
+                    self.sendKexInit()
+        packet = self.getPacket()
+        while packet:
+            message_num = ord(packet[0])
+            self.dispatchMessage(message_num, packet[1:])
+            packet = self.getPacket()
+
+    def sendDisconnect(self, reason, desc):
+        """
+        http://kbyte.snowpenguin.org/portal/2013/04/30/kippo-protocol-mismatch-workaround/
+        Workaround for the "bad packet length" error message.
+
+        @param reason: the reason for the disconnect.  Should be one of the
+                       DISCONNECT_* values.
+        @type reason: C{int}
+        @param desc: a description of the reason for the disconnection.
+        @type desc: C{str}
+        """
+        if 'bad packet length' not in desc:
+            # With python >= 3 we can use super?
+            transport.SSHServerTransport.sendDisconnect(self, reason, desc)
+        else:
+            self.transport.write('Protocol mismatch.\n')
+            log.msg(log.LRED, '[SERVER]', 'Disconnecting with error, code %s\nreason: %s' % (reason, desc))
+            self.transport.loseConnection()
 
 
 class HonsshServerFactory(factory.SSHFactory):
